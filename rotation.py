@@ -18,13 +18,13 @@ def calculate_slope(X, y):
     return model.coef_[0]
 
 
-# Fetch QQQ ETF data
-etfs_data = yf.download('QQQ')
+# Fetch XLY ETF data
+etfs_data = yf.download('XLY')
 etf_close = pd.DataFrame(etfs_data["Close"])
-etf_close.rename(columns={"Close": "QQQ"}, inplace=True)
+etf_close.rename(columns={"Close": "XLY"}, inplace=True)
 
-# Calculate 200-day moving average for QQQ
-etf_close['QQQ_200_SMA'] = etf_close['QQQ'].rolling(window=200).mean()
+# Calculate 200-day moving average for XLY
+etf_close['XLY_200_SMA'] = etf_close['XLY'].rolling(window=200).mean()
 
 # Replace 'your_api_key' with your actual FRED API key
 fred = Fred(api_key='2f15c96b46530fde1b1992a64c64650e')
@@ -58,7 +58,7 @@ for i in range(12*7, len(combined_df)):
 oil_price = fred.get_series('DCOILWTICO')
 oil_price = oil_price.dropna()
 etf_close = etf_close.reindex(oil_price.index).dropna()
-etf_log = np.log(etf_close['QQQ'])
+etf_log = np.log(etf_close['XLY'])
 oil_log = np.log(oil_price)
 etf_oil_log_ratio = etf_log.div(oil_log)
 indicator = pd.Series(index=etf_oil_log_ratio.index)
@@ -90,7 +90,7 @@ combined_df['growth_indicator'] = indicator
 
 # Calculate the daily returns of the strategy
 combined_df['strategy_daily_returns'] = 0
-combined_df.loc[(combined_df['inflation_indicator'] == 0) & (combined_df['growth_indicator'] == 1) & (combined_df['QQQ'] > combined_df['QQQ_200_SMA']), 'strategy_daily_returns'] = combined_df['QQQ'].pct_change()
+combined_df.loc[(combined_df['inflation_indicator'].shift(1) == 0) & (combined_df['growth_indicator'].shift(1) == 1), 'strategy_daily_returns'] = combined_df['XLY'].pct_change()
 
 # Calculate the cumulative returns of the strategy
 combined_df['strategy_cumulative_returns'] = (1 + combined_df['strategy_daily_returns']).cumprod()
