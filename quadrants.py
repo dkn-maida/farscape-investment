@@ -18,12 +18,14 @@ def calculate_slope(X, y):
 fred = Fred(api_key='2f15c96b46530fde1b1992a64c64650e')
 
 # Fetch CPI Data
-cpi_data = fred.get_series('CPIAUCSL')
+cpi_data = fred.get_series('INDCPIALLMINMEI')
 cpi_df = pd.DataFrame(cpi_data, columns=['CPI'])
 cpi_df['log_CPI'] = np.log(cpi_df['CPI'])
+cpi_df = cpi_df.dropna(subset=['log_CPI'])
+
 
 # Fetch SPY Data
-spy = yf.download('SPY', start='2000-01-01', end='2023-06-19')
+spy = yf.download('INDA')
 spy_close = spy['Close']
 
 # Fetch Oil Price Data
