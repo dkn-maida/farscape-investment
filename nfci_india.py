@@ -12,7 +12,7 @@ nfci_data.set_index('date', inplace=True)
 nfci_data['nfci_sma_14'] = nfci_data['NFCI'].rolling(window=2).mean()
 
 # Download SPY data
-spy_data = yf.download('^GDAXI', start=nfci_data.index.min(), end=nfci_data.index.max())
+spy_data = yf.download('INDA', start="2008-01-01", end=nfci_data.index.max())
 spy_data = spy_data[['Adj Close']].resample("W-FRI").last()  # we only need the adjusted close prices
 
 # Merge the two dataframes
@@ -30,7 +30,7 @@ data.dropna(inplace=True)
 
 # Plot the strategy and SPY performance
 (data['strategy_returns'] + 1).cumprod().plot(label='Strategy', color='b')
-(data['spy_returns'] + 1).cumprod().plot(label='SPY Buy and Hold', color='r')
+(data['spy_returns'] + 1).cumprod().plot(label='INDA Buy and Hold', color='r')
 plt.title('Performance Comparison')
 plt.legend()
 plt.show()
