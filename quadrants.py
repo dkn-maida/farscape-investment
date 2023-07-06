@@ -25,7 +25,11 @@ cpi_df = cpi_df.dropna(subset=['log_CPI'])
 
 
 # Fetch SPY Data
+<<<<<<< HEAD
 spy = yf.download('INDA')
+=======
+spy = yf.download('^GSPC', start="1987-01-01")
+>>>>>>> d05d4b09b8f6d5d876ca0aa63c127409694db9e9
 spy_close = spy['Close']
 
 # Fetch Oil Price Data
@@ -87,7 +91,7 @@ nfci_data.set_index('date', inplace=True)
 nfci_data.drop(columns=['DATE'], inplace=True)
 # Resample the data to daily frequency (use 'ffill' to forward fill the missing values)
 nfci_data_daily = nfci_data.resample("D").ffill()
-# Calculate the 14-day moving average
+# Calculate the 2-day moving average
 nfci_data_daily['nfci_sma_14'] = nfci_data_daily['NFCI'].rolling(window=14).mean()
 # Create a signal
 nfci_data_daily['signal'] = np.where(nfci_data_daily['NFCI'] < nfci_data_daily['nfci_sma_14'], 1, 0)
@@ -145,7 +149,7 @@ plt.show()
 # Merge with NFCI data
 merged_data = merged_data.merge(nfci_data_daily[['NFCI', 'signal']], how='left', left_index=True, right_index=True)
 # Filtering for days when inflation_indicator is 0, growth_indicator is 1, and NFCI signal is 1
-invested = merged_data[(merged_data['inflation_indicator'] == 0) & (merged_data['growth_indicator'] == 1) & (merged_data['signal'] == 1)].copy()
+invested = merged_data[(merged_data['inflation_indicator'].shift(1) == 0) & (merged_data['growth_indicator'].shift(1) == 1) & (merged_data['signal'].shift(1) == 1)].copy()
 # Calculating daily portfolio value
 invested['daily_portfolio_value'] = (1 + invested['spy_returns']).cumprod()
 
@@ -164,7 +168,7 @@ plt.show()
 
 # CAGR
 years = (invested.index[-1] - invested.index[0]).days / 365.25
-CAGR = (invested['daily_portfolio_value'][-1]) ** (1 / years) - 1
+CAGR = (invested['daily_portfolio_value'][-1]) ** (1 / years*6) - 1
 # Max Drawdown
 invested['cumulative_max_value'] = invested['daily_portfolio_value'].cummax()
 invested['drawdown'] = invested['daily_portfolio_value'] / invested['cumulative_max_value'] - 1
@@ -177,3 +181,9 @@ sharpe_ratio = np.mean(excess_daily_returns) / np.std(excess_daily_returns) * np
 print(f"CAGR: {CAGR * 100:.2f}%")
 print(f"Max Drawdown: {max_drawdown * 100:.2f}%")
 print(f"Sharpe ratio: {sharpe_ratio}")
+
+num_days_invested = len(invested)
+total_days = len(merged_data)
+percentage_time_invested = (num_days_invested / total_days) * 100
+# Printing the result
+print(f"Percentage of Time Invested: {percentage_time_invested:.2f}%")

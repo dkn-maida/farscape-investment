@@ -11,9 +11,11 @@ nfci_data.set_index('date', inplace=True)
 # Calculate the 14-day moving average
 nfci_data['nfci_sma_14'] = nfci_data['NFCI'].rolling(window=2).mean()
 
+print(nfci_data)
+
 # Download SPY data
-spy_data = yf.download('^GDAXI', start=nfci_data.index.min(), end=nfci_data.index.max())
-spy_data = spy_data[['Adj Close']].resample("W-FRI").last()  # we only need the adjusted close prices
+spy_data = yf.download('^GSPC', start=nfci_data.index.min(), end=nfci_data.index.max())
+spy_data = spy_data[['Close']].resample("W-FRI").last()  # we only need the adjusted close prices
 
 # Merge the two dataframes
 data = spy_data.join(nfci_data, how='inner')
@@ -22,8 +24,8 @@ data = spy_data.join(nfci_data, how='inner')
 data['signal'] = np.where(data['NFCI'] < data['nfci_sma_14'], 1, 0)
 
 # Calculate strategy returns
-data['strategy_returns'] = data['Adj Close'].pct_change() * data['signal'].shift(1)
-data['spy_returns'] = data['Adj Close'].pct_change()
+data['strategy_returns'] = data['Close'].pct_change() * data['signal'].shift(1)
+data['spy_returns'] = data['Close'].pct_change()
 
 # Drop missing values
 data.dropna(inplace=True)
