@@ -25,11 +25,7 @@ cpi_df = cpi_df.dropna(subset=['log_CPI'])
 
 
 # Fetch SPY Data
-<<<<<<< HEAD
-spy = yf.download('INDA')
-=======
 spy = yf.download('^GSPC', start="1987-01-01")
->>>>>>> d05d4b09b8f6d5d876ca0aa63c127409694db9e9
 spy_close = spy['Close']
 
 # Fetch Oil Price Data
