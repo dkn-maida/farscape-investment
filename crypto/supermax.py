@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Download historical data
-data = yf.download('BTC-USD', start='2018-01-01', end='2023-07-26')
+data = yf.download('BTC-USD', start='2023-01-01')
 
 # Calculate the 10-day high
-data['10_day_high'] = data['Close'].rolling(window=7).max()
+data['10_day_high'] = data['Close'].rolling(window=1).max()
 
 # Create a signal when the close price crosses the 10_day_high
 data['buy_signal'] = np.where(data['Close'] > data['10_day_high'].shift(), 1, 0)
@@ -26,7 +26,7 @@ data['sell_signal'] = data['sell_signal'].shift()
 data['sell_signal'].fillna(0, inplace=True)
 
 # Calculate daily percentage returns of strategy
-data['strategy_returns'] = np.where(data['sell_signal'] == 1, np.where(data['take_profit_signal'] == 1, 0.01, data['Close'].pct_change()), 0)
+data['strategy_returns'] = np.where(data['sell_signal'] == 1, np.where(data['take_profit_signal'] == 1, data['Close'].pct_change(), 0.01 ), 0)
 
 # Calculate cumulative returns of strategy
 data['strategy_cumulative_returns'] = (1 + data['strategy_returns']).cumprod()
