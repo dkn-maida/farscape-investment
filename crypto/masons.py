@@ -6,7 +6,7 @@ import empyrical as ep
 
 
 # Download historical data for the ETFs
-data = yf.download('BTC-USD', start='2020-01-01')['Close']
+data = yf.download('BTC-USD', start='2018-01-01')['Close']
 
 def masons_index(prices, window=7):
     n = len(prices)

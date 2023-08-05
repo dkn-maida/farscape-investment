@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Read the data
-nfci_data = pd.read_csv('../nfci.csv')
+nfci_data = pd.read_csv('nfci.csv')
 nfci_data['date'] = pd.to_datetime(nfci_data['DATE'])
 nfci_data.set_index('date', inplace=True)
 
@@ -12,7 +12,7 @@ nfci_data.set_index('date', inplace=True)
 nfci_data['nfci_sma_14'] = nfci_data['NFCI'].rolling(window=2).mean()
 
 # Download SPY data
-spy_data = yf.download('BTC-USD', start="2020-01-01", end=nfci_data.index.max())
+spy_data = yf.download('BTC-USD', start="2018-01-01", end=nfci_data.index.max())
 spy_data = spy_data[['Close']].resample("W-FRI").last()  # we only need the adjusted close prices
 
 # Merge the two dataframes
@@ -30,7 +30,7 @@ data.dropna(inplace=True)
 
 # Plot the strategy and SPY performance
 (data['strategy_returns'] + 1).cumprod().plot(label='Strategy', color='b')
-(data['spy_returns'] + 1).cumprod().plot(label='BTC Buy and Hold', color='r')
+(data['spy_returns'] + 1).cumprod().plot(label='SPY Buy and Hold', color='r')
 plt.title('Performance Comparison')
 plt.legend()
 plt.show()
@@ -60,23 +60,4 @@ sharpe_ratio_spy = np.mean(data['spy_returns']) / np.std(data['spy_returns']) * 
 
 # Printing the results
 print(f"Strategy: CAGR: {cagr_strategy:.2%}, Max Drawdown: {max_drawdown_strategy:.2%}, Sharpe Ratio: {sharpe_ratio_strategy:.2f}")
-print(f"SPY Buy and Hold: CAGR: {cagr_spy:.2%}, Max Drawdown: {max_drawdown_spy:.2%}, Sharpe Ratio: {sharpe_ratio_spy:.2f}")
-
-# Plot the NFCI value over time
-nfci_data['NFCI'].plot(label='NFCI', color='b')
-plt.title('NFCI Over Time')
-plt.legend()
-plt.show()
-
-# Plot the trading signals over time
-data['signal'].plot(label='Trading Signal', color='b')
-plt.title('Trading Signals Over Time')
-plt.legend()
-plt.show()
-
-# Get the latest date and value
-latest_date = data.index[-1]
-latest_value = data['signal'].iloc[-1]
-
-# Print the latest date and value
-print(f"Latest Date: {latest_date}, Latest Signal Value: {latest_value}")
+print(f"Buy and Hold: CAGR: {cagr_spy:.2%}, Max Drawdown: {max_drawdown_spy:.2%}, Sharpe Ratio: {sharpe_ratio_spy:.2f}")

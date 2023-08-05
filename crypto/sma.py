@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Download historical data
-data = yf.download('BTC-USD', start='2020-01-01')
+data = yf.download('BTC-USD', start='2018-01-01')
 
 # Calculate the SMA
-data['sma100'] = data['Close'].rolling(window=100).mean()
+data['sma100'] = data['Close'].rolling(window=10).mean()
 
 # Create a signal when the close price crosses the SMA100
 data['above_sma100'] = data['Close'] > data['sma100']

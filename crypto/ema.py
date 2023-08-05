@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Download historical data
-data = yf.download('BTC-USD', start='2020-01-01')
+data = yf.download('BTC-USD', start="2018-01-01")
 
 # Calculate the EMA
-data['ema10'] = data['Close'].ewm(span=100, adjust=False).mean()
+data['ema10'] = data['Close'].ewm(span=13, adjust=False).mean()
 
 # Create a signal when the close price crosses the EMA10
 data['above_ema10'] = data['Close'] > data['ema10']
