@@ -12,7 +12,7 @@ nfci_data.set_index('date', inplace=True)
 nfci_data['nfci_sma_14'] = nfci_data['NFCI'].rolling(window=2).mean()
 
 # Download SPY data
-spy_data = yf.download('BTC-USD', start="2018-01-01", end=nfci_data.index.max())
+spy_data = yf.download('BTC-USD', start="2015-01-01", end=nfci_data.index.max())
 spy_data = spy_data[['Close']].resample("W-FRI").last()  # we only need the adjusted close prices
 
 # Merge the two dataframes

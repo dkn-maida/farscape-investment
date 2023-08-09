@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Download historical data
-data = yf.download('BTC-USD', start='2015-01-01')
+data = yf.download('BTC-USD', start='2000-01-01')
 
 # Calculate the 10-day low and EMA100
-data['5_day_low'] = data['Low'].rolling(window=7).min()
+data['5_day_low'] = data['Low'].rolling(window=10).min()
 
 # Create a signal when the close price drops below the 10_day_low and is above the EMA100
 data['buy_signal'] = (data['Close'] < data['5_day_low'].shift())

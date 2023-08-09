@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Download historical data
-data = yf.download('BTC-USD', start='2015-01-01')
+data = yf.download('BTC-USD', start='2000-01-01')
 
 # Calculate the 10-day high
 data['5_day_low'] = data['Low'].rolling(window=5).min()
