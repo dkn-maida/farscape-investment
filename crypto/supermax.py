@@ -27,6 +27,7 @@ data['strategy_cumulative_returns'] = (1 + data['strategy_returns']).cumprod()
 
 # Plot the equity curve of the strategy and benchmark
 plt.figure(figsize=(10,5))
-plt.plot(data['strategy_cumulative_returns'], label='10 Day High Strategy')
+# convert y-axis to Logarithmic scale
+plt.plot(data['strategy_cumulative_returns'], label='10 Day High Strategy',)
 plt.legend()
 plt.show()
