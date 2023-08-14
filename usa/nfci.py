@@ -167,38 +167,3 @@ print(f"Latest Date: {latest_date}, Latest Signal Value: {latest_value}")
 
 correlation = data['SPY'].pct_change().corr(data['VIXM'].pct_change())
 print(f"Correlation between SPY and VIXM: {correlation:.4f}")
-
-
-import pandas as pd
-import yfinance as yf
-import matplotlib.pyplot as plt
-
-# Download SPY data
-spy_data = yf.download('SPY', start='2011-01-03', end='2023-08-13')['Close']
-
-# Calculate daily returns
-spy_data['Return'] = spy_data.pct_change()
-
-# Extract day of the week
-spy_data['Day_of_Week'] = spy_data.index.day_name()
-
-# Group by the day of the week and get a list of returns for each group
-grouped = spy_data.groupby('Day_of_Week')['Return'].apply(list)
-
-# Plotting
-plt.figure(figsize=(12,7))
-
-# List of weekdays in order
-days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
-
-# Plot histograms for each weekday
-for day in days:
-    plt.hist(grouped[day], bins=50, label=day, alpha=0.6)
-
-plt.title('Distribution of SPY Returns by Day of the Week')
-plt.xlabel('Return')
-plt.ylabel('Frequency')
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.show()
