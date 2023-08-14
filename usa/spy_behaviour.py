@@ -44,7 +44,6 @@ plt.grid(axis='y', linestyle='--', alpha=0.7)
 plt.tight_layout()
 plt.show()
 
-
 # Calculate the median return for each day of the week
 median_returns = spy_data.groupby('Day_of_Week')['Return'].median().reindex(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'])
 
@@ -149,8 +148,6 @@ plt.show()
 
 print(f"Average return after an Up Week: {avg_return_after_up*100:.2f}%")
 print(f"Average return after a Down Week: {avg_return_after_down*100:.2f}%")
-
-
 
 # Download SPY data
 spy_data = yf.download('SPY', start="2021-01-01")['Close'].resample('W-FRI').last().to_frame()
