@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Download SPY data
-spy_data = yf.download('SPY')['Close'].to_frame()
+spy_data = yf.download('SPY',  start="2021-01-01")['Close'].to_frame()
 # Calculate daily returns
 spy_data['Return'] = spy_data['Close'].pct_change()
 # Extract day of the week
@@ -79,7 +79,7 @@ plt.show()
 
 
 # Download SPY data
-spy_data = yf.download('SPY')['Close'].to_frame()
+spy_data = yf.download('SPY',  start="2021-01-01")['Close'].to_frame()
 spy_data['Day_of_Week'] = spy_data.index.day_name()
 spy_data['Daily_Return'] = spy_data['Close'].pct_change()
 
@@ -124,7 +124,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Download SPY data
-spy_data = yf.download('SPY')['Close'].resample('W-FRI').last().to_frame()
+spy_data = yf.download('SPY',  start="2021-01-01")['Close'].resample('W-FRI').last().to_frame()
 spy_data['Weekly_Return'] = spy_data['Close'].pct_change()
 
 # Create flags for up and down weeks
@@ -153,7 +153,7 @@ print(f"Average return after a Down Week: {avg_return_after_down*100:.2f}%")
 
 
 # Download SPY data
-spy_data = yf.download('SPY')['Close'].resample('W-FRI').last().to_frame()
+spy_data = yf.download('SPY', start="2021-01-01")['Close'].resample('W-FRI').last().to_frame()
 spy_data['Weekly_Return'] = spy_data['Close'].pct_change()
 
 # Flag for down weeks
