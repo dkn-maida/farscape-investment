@@ -6,15 +6,13 @@ from datetime import datetime
 currency_pairs = ["EURUSD=X", "JPYUSD=X", "GBPUSD=X", "CHFUSD=X", "AUDUSD=X", "CADUSD=X"]
 
 # Define start and end dates for data retrieval
-start_date = datetime(2000, 1, 1)
-end_date = datetime.today()
-
+start_date = datetime(2010, 1, 1)
 dataframes = {}
 
 # Fetch data using yfinance
 for pair in currency_pairs:
     try:
-        data = yf.download(pair, start=start_date, end=end_date)
+        data = yf.download(pair, start=start_date)
         data = data[['Close']]  # Only the 'Close' column
         data.columns = [pair]  # Rename column to the currency pair name
         dataframes[pair] = data
@@ -25,7 +23,7 @@ for pair in currency_pairs:
 merged_df = pd.concat(dataframes.values(), axis=1)
 
 def calculate_6_month_momentum(data, pair_name):
-    return data[pair_name].shift(1) / data[pair_name].shift(180) - 1  # Assuming about 30 trading days per month
+    return data[pair_name].shift(1) / data[pair_name].shift(365) - 1  # Assuming about 30 trading days per month
 
 # Calculating momentum
 for pair in currency_pairs:
@@ -42,10 +40,3 @@ for date in merged_df.index[180:]:  # start from 180 due to momentum calc
     weakest_currency = min(monthly_momentum, key=monthly_momentum.get).replace("=X", "")
     
     print(f"date -> {date} weakest-> {weakest_currency} strongest-> {strongest_currency}")
-
-# Convert portfolio to DataFrame for visualization
-portfolio_df = pd.DataFrame(portfolio, columns=["Date", "Investment_Pair", "Capital"])
-print(portfolio_df)
-
-# Optionally, to save to CSV
-# portfolio_df.to_csv('backtest_results.csv', index=False)

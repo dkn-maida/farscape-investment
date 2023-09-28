@@ -23,10 +23,8 @@ def calculate_slope(X, y):
     model.fit(X, y)
     return model.coef_[0]
 
-assets=['XLK', 'XLU', 'XLE', 'XLF','XLV','XLI','XLB', 'IYR', 'VOX', 'XLP', 'XLY', 'SHV']
-#assets=['XLK', 'XLU', 'XLE', 'XLF','XLV','XLI','XLB', 'IYR', 'VOX', 'XLP', 'XLY']
-
-
+import itertools
+assets=['SPY']
 asset_data =  yf.download(assets, start='2012-01-01')['Close']
 
 # Fetch SPY Data
@@ -38,22 +36,6 @@ oil_price = fred.get_series('DCOILWTICO')
 oil_price = oil_price[oil_price > 0]  # Keep only positive values for log
 oil_log = np.log(oil_price.dropna())  # Drop NaN and calculate log
 spy_oil_log_ratio = np.log(spy_close).div(oil_log, axis=0)
-
-
-#Fetch NFCI data
-# Read the data
-nfci_data = pd.read_csv('nfci.csv')
-# Convert the 'DATE' column to datetime
-nfci_data['date'] = pd.to_datetime(nfci_data['DATE'])
-# Set the index to the 'date' column and drop the old 'DATE' column
-nfci_data.set_index('date', inplace=True)
-nfci_data.drop(columns=['DATE'], inplace=True)
-# Resample the data to daily frequency (use 'ffill' to forward fill the missing values)
-nfci_data_daily = nfci_data.resample("D").ffill()
-# Calculate the 14-day moving average
-nfci_data_daily['nfci_sma_14'] = nfci_data_daily['NFCI'].rolling(window=14).mean()
-# Create a signal
-nfci_data_daily['signal'] = np.where(nfci_data_daily['NFCI'] < nfci_data_daily['nfci_sma_14'], 1, 0)
 
 # Initialize Indicators
 inflation_indicator = pd.Series(index=cpi_df.index)
@@ -81,7 +63,7 @@ for date in spy_oil_log_ratio.index:
     last_year_data = spy_oil_log_ratio[(spy_oil_log_ratio.index >= one_year_ago) & (spy_oil_log_ratio.index < date)].dropna()
     seven_years_ago = date - DateOffset(years=7)
     last_seven_years_data = spy_oil_log_ratio[(spy_oil_log_ratio.index >= seven_years_ago) & (spy_oil_log_ratio.index < date)].dropna()
-    
+
     if not last_year_data.empty and not last_seven_years_data.empty:
         X1 = np.array(last_year_data.index.map(convert_date_to_ordinal)).reshape(-1, 1)
         y1 = last_year_data.values
@@ -89,8 +71,8 @@ for date in spy_oil_log_ratio.index:
         y7 = last_seven_years_data.values
         growth_indicator[date] = int(calculate_slope(X7, y7) < calculate_slope(X1, y1))
 
-        
-        
+
+
 # Here, you can use 'inflation_indicator' and 'growth_indicator' for further analysis or backtesting.
 # Merge the inflation_indicator and growth_indicator
 indicators = pd.concat([inflation_indicator, growth_indicator], axis=1)
@@ -99,8 +81,6 @@ indicators = indicators.dropna()
 
 # After computing the indicators, merge them with asset data
 merged_data = pd.concat([asset_data, indicators], axis=1).dropna()
-# After computing the indicators, merge them with asset data and NFCI signal
-merged_data = pd.concat([asset_data, indicators, nfci_data_daily['signal']], axis=1).dropna()
 
 # Compute daily returns for assets
 for asset in assets:
@@ -108,11 +88,10 @@ for asset in assets:
 
 # Cumulative returns for different combinations of inflation and growth indicators for each asset
 combinations = [(0, 0), (0, 1), (1, 0), (1, 1)]
-for asset in assets:
-    for inflation, growth in combinations:
-        col_name = f'cum_returns_{inflation}{growth}_{asset.lower()}'
-        returns_col = f'{asset.lower()}_returns'
-        merged_data[col_name] = (1 + merged_data.loc[(merged_data['inflation_indicator'] == inflation) & (merged_data['growth_indicator'] == growth), returns_col]).cumprod()
+for asset, (inflation, growth) in itertools.product(assets, combinations):
+    col_name = f'cum_returns_{inflation}{growth}_{asset.lower()}'
+    returns_col = f'{asset.lower()}_returns'
+    merged_data[col_name] = (1 + merged_data.loc[(merged_data['inflation_indicator'] == inflation) & (merged_data['growth_indicator'] == growth), returns_col]).cumprod()
 
 # Plot cumulative returns for each asset
 plt.figure(figsize=(12, 6))
@@ -137,7 +116,7 @@ for i, (inflation, growth) in enumerate(combinations):
     for asset in assets:
         col_name = f'cum_returns_{inflation}{growth}_{asset.lower()}'
         ax.plot(merged_data.index, merged_data[col_name], label=f'{asset}')
-        
+
     ax.legend()
     ax.set_xlabel('Date')
     ax.set_ylabel('Cumulative Returns')
@@ -154,18 +133,11 @@ portfolio = pd.Series(index=merged_data.index)
 for date in merged_data.index:
     inflation_indicator = merged_data.loc[date, 'inflation_indicator']
     growth_indicator = merged_data.loc[date, 'growth_indicator']
-    signal= merged_data.loc[date, 'signal']
-
-    if inflation_indicator == 0 and growth_indicator == 1 and signal == 1:
-        portfolio[date] = merged_data.loc[date, 'xlk_returns'] * 0.5 + merged_data.loc[date, 'xly_returns'] * 0.5
-    elif inflation_indicator == 1 and growth_indicator == 1 and signal == 1:
-        portfolio[date] = merged_data.loc[date, 'xlp_returns'] * 0.5 + merged_data.loc[date, 'xlu_returns'] * 0.5
-    elif inflation_indicator == 1 and growth_indicator == 0 and signal == 1:
-        portfolio[date] = merged_data.loc[date, 'xlp_returns'] * 0.5 + merged_data.loc[date, 'xlu_returns'] * 0.5
-    elif inflation_indicator == 0 and growth_indicator == 0 and signal == 1:
-        portfolio[date] = merged_data.loc[date, 'xlk_returns'] * 0.5 + merged_data.loc[date, 'xly_returns'] * 0.5
-    else :
-        portfolio[date] = merged_data.loc[date, 'shv_returns']
+    if (
+        inflation_indicator == 0
+        and growth_indicator == 1
+    ):
+        portfolio[date] = merged_data.loc[date, 'spy_returns']
 
 # Calculate cumulative portfolio returns
 portfolio_cumulative_returns = (1 + portfolio.fillna(0)).cumprod()
