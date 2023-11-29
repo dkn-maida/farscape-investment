@@ -13,9 +13,9 @@ nfci_data['nfci_sma_14'] = nfci_data['NFCI'].rolling(window=2).mean()
 # Shift the 14-day moving average by one day
 nfci_data['nfci_sma_14_shifted'] = nfci_data['nfci_sma_14'].shift(1)
 
-# Download TQQQ and SH data
-symbols = ['TQQQ','SH']
-prices_data = yf.download(symbols, start='2016-01-03', end=nfci_data.index.max())['Close']
+# Download SPGP and SH data
+symbols = ['SPGP','SH']
+prices_data = yf.download(symbols, start='2000-01-01', end=nfci_data.index.max())['Close']
 prices_data = prices_data.resample("W-FRI").last()
 
 # Saving trade log
@@ -28,8 +28,8 @@ data = prices_data.join(nfci_data, how='inner')
 data['signal'] = np.where(data['NFCI'] < data['nfci_sma_14_shifted'], 1, 0)
 
 # Calculate strategy returns
-data['strategy_returns'] = np.where(data['signal'] == 1, data['TQQQ'].shift(1).pct_change(), data['SH'].shift(1).pct_change())
-data['TQQQ_returns'] = data['TQQQ'].pct_change()
+data['strategy_returns'] = np.where(data['signal'] == 1, data['SPGP'].shift(1).pct_change(), data['SH'].shift(1).pct_change())
+data['SPGP_returns'] = data['SPGP'].pct_change()
 data['cumulative_strategy_returns'] = (1 + data['strategy_returns']-0.0001).cumprod()
 # Calculate the total period in years
 total_years = (data.index[-1] - data.index[0]).days / 365.0
@@ -65,7 +65,7 @@ def evaluate_strategy(window_size, data):
     data['nfci_sma'] = data['NFCI'].rolling(window=window_size).mean()
     data['nfci_sma_shifted'] = data['nfci_sma'].shift(1)
     data['signal'] = np.where(data['NFCI'] < data['nfci_sma_shifted'], 1, 0)
-    data['strategy_returns'] = np.where(data['signal'] == 1, data['TQQQ'].shift(1).pct_change(), data['SH'].shift(1).pct_change())
+    data['strategy_returns'] = np.where(data['signal'] == 1, data['SPGP'].shift(1).pct_change(), data['SH'].shift(1).pct_change())
     
     years = (data.index[-1] - data.index[0]).days / 365.0
     cagr_strategy = (1 + data['strategy_returns']).cumprod().iloc[-1] ** (1 / years) - 1
@@ -103,13 +103,13 @@ test_data = data.iloc[train_size:].copy()   # use .copy() to create a copy
 train_data['nfci_sma_14'] = train_data['NFCI'].rolling(window=2).mean()
 train_data['nfci_sma_14_shifted'] = train_data['nfci_sma_14'].shift(1)
 train_data['signal'] = np.where(train_data['NFCI'] < train_data['nfci_sma_14_shifted'], 1, 0)
-train_data['strategy_returns'] = np.where(train_data['signal'] == 1, train_data['TQQQ'].shift(1).pct_change(), train_data['SH'].shift(1).pct_change())
+train_data['strategy_returns'] = np.where(train_data['signal'] == 1, train_data['SPGP'].shift(1).pct_change(), train_data['SH'].shift(1).pct_change())
 
 # Applying strategy to test data
 test_data['nfci_sma_14'] = test_data['NFCI'].rolling(window=2).mean()
 test_data['nfci_sma_14_shifted'] = test_data['nfci_sma_14'].shift(1)
 test_data['signal'] = np.where(test_data['NFCI'] < test_data['nfci_sma_14_shifted'], 1, 0)
-test_data['strategy_returns'] = np.where(test_data['signal'] == 1, test_data['TQQQ'].shift(1).pct_change(), test_data['SH'].shift(1).pct_change())
+test_data['strategy_returns'] = np.where(test_data['signal'] == 1, test_data['SPGP'].shift(1).pct_change(), test_data['SH'].shift(1).pct_change())
 
 
 years = (test_data.index[-1] - test_data.index[0]).days / 365.0
@@ -151,7 +151,7 @@ for i, row in data.iterrows():
             trade_log = pd.concat([trade_log, trade_data], ignore_index=True)
         
         # Update current position and trade start
-        current_position = 'TQQQ' if row['signal'] == 1 else 'SH'
+        current_position = 'SPGP' if row['signal'] == 1 else 'SH'
         trade_start = i
         entry_price = row[current_position]
         
@@ -174,8 +174,8 @@ latest_value = data['signal'].iloc[-1]
 # Print the latest date and value
 print(f"Latest Date: {latest_date}, Latest Signal Value: {latest_value}")
 
-correlation = data['TQQQ'].pct_change().corr(data['SH'].pct_change())
-print(f"Correlation between TQQQ and SH: {correlation:.4f}")
+correlation = data['SPGP'].pct_change().corr(data['SH'].pct_change())
+print(f"Correlation between SPGP and SH: {correlation:.4f}")
 
 
 # Determine where trades take place (i.e., where the signal changes)
@@ -201,7 +201,7 @@ for i, row in data.iterrows():
             trade_log = pd.concat([trade_log, trade_data], ignore_index=True)
         
         # Update current position and trade start
-        current_position = 'TQQQ' if row['signal'] == 1 else 'SH'
+        current_position = 'SPGP' if row['signal'] == 1 else 'SH'
         trade_start = i
         entry_price = row[current_position]
 
