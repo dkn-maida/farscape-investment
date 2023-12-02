@@ -6,7 +6,7 @@ import pandas as pd
 apple_data = yf.download('AAPL', start='2020-01-01', end='2023-01-01')
 
 # Calculate the 150-day simple moving average (SMA)
-apple_data['150d_sma'] = apple_data['Adj Close'].rolling(window=150).mean()
+apple_data['150d_sma'] = apple_data['Adj Close'].rolling(window=20).mean()
 
 # Calculate daily returns
 apple_data['Daily Returns'] = apple_data['Adj Close'].pct_change()
