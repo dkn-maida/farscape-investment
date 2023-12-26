@@ -1,24 +1,28 @@
-import requests
+from backtesting import Backtest, Strategy
+from backtesting.lib import crossover
 
-# API Endpoint
-url = "https://financialmodelingprep.com/api/v3/sp500_constituent"
+from backtesting.test import SMA, GOOG
 
-# Your API Key (if required)
-api_key = "9d3a358bc5165e8334c3f2f858e4c315"
 
-# Parameters
-params = {
-    "apikey": api_key
-}
+class SmaCross(Strategy):
+    n1 = 10
+    n2 = 20
 
-response = requests.get(url, params=params)
+    def init(self):
+        close = self.data.Close
+        self.sma1 = self.I(SMA, close, self.n1)
+        self.sma2 = self.I(SMA, close, self.n2)
 
-# Check if the request was successful
-if response.status_code == 200:
-    # Parse the response to JSON
-    data = response.json()
-    # Print the list of stocks
-    for stock in data:
-        print(stock)
-else:
-    print("Failed to fetch data: Status code", response.status_code)
+    def next(self):
+        if crossover(self.sma1, self.sma2):
+            self.buy()
+        elif crossover(self.sma2, self.sma1):
+            self.sell()
+
+
+bt = Backtest(GOOG, SmaCross,
+              cash=10000, commission=.002,
+              exclusive_orders=True)
+
+output = bt.run()
+bt.plot()
