@@ -19,7 +19,7 @@ symbols = [
 
 benchmark_symbol = "^OEX"
 start_date = "2020-01-01"
-initial_balance = 600000
+initial_balance = 500000
 rolling_window = 63
 
 # Fetch Historical Stock Data
