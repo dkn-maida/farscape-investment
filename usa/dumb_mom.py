@@ -18,9 +18,9 @@ symbols = [
 ]
 
 benchmark_symbol = "^OEX"
-start_date = "2020-01-01"
+start_date = "2014-01-01"
 initial_balance = 500000
-rolling_window = 63
+rolling_window = 126
 
 # Fetch Historical Stock Data
 historical_data = yf.download(symbols, start=start_date)['Adj Close']
@@ -28,55 +28,68 @@ historical_data = yf.download(symbols, start=start_date)['Adj Close']
 # Calculate Daily Returns
 daily_returns = historical_data.pct_change()
 
-# Calculate Sharpe Ratio for each stock over the rolling window
-sharpe_ratios = daily_returns.rolling(window=rolling_window).mean() / daily_returns.rolling(window=rolling_window).std()
+def calculate_downside_deviation(returns, target=0):
+    """
+    Calculate the downside deviation of returns below the target.
+    """
+    downside_diff = returns - target
+    downside_diff[downside_diff > 0] = 0  # Only keep negative differences
+    downside_deviation = np.sqrt((downside_diff**2).rolling(window=rolling_window).mean())
+    return downside_deviation
+
+# Adjust the calculation of rolling mean returns and downside deviation
+rolling_mean_returns = daily_returns.rolling(window=rolling_window).mean()
+rolling_downside_deviation = calculate_downside_deviation(daily_returns, target=0)
+
+# Calculate Sortino Ratio for each stock over the rolling window
+sortino_ratios = rolling_mean_returns / rolling_downside_deviation
+
 
 # Initialize Portfolio Variables
 portfolio = {}
 cash_balance = initial_balance
 portfolio_values = []
-purchase_prices = {}  # Track purchase prices for the protective put simulation
+purchase_prices = {}
 
+# Rebalance Portfolio Function
 def rebalance_portfolio(date, top_stocks, portfolio, cash_balance, prices):
     global purchase_prices
     new_portfolio = {}
     new_cash_balance = cash_balance
 
-    # Sell existing holdings
     for symbol, shares in portfolio.items():
         if symbol in prices:
             price = prices[symbol]
-            # Calculate sale price considering the protective put (min loss -2%)
             purchase_price = purchase_prices.get(symbol, 0)
-            max_loss_price = purchase_price * 0.98
-            sale_price = max(price, max_loss_price)
+            sale_price = max( price, 0.8 * purchase_price )
             new_cash_balance += sale_price * shares
 
-    # Buy new positions
     num_stocks = len(top_stocks)
     if num_stocks > 0:
-        # Adjust for the 2% cost of buying the protective put
-        position_size = (new_cash_balance * 0.98) / num_stocks
+        position_size = (new_cash_balance) / num_stocks
         for symbol in top_stocks:
             if symbol in prices:
                 stock_price = prices[symbol]
                 shares_to_buy = position_size // stock_price
                 new_portfolio[symbol] = shares_to_buy
                 new_cash_balance -= shares_to_buy * stock_price
-                purchase_prices[symbol] = stock_price  # Update purchase price
+                purchase_prices[symbol] = stock_price
 
     return new_cash_balance, new_portfolio
 
+# Calculate Portfolio Value Function
 def calculate_portfolio_value(portfolio, cash_balance, prices):
     total_value = cash_balance
-    total_value += sum(prices[symbol] * shares for symbol, shares in portfolio.items() if symbol in prices)
+    for symbol, shares in portfolio.items():
+        if symbol in prices:
+            total_value += prices[symbol] * shares
     return total_value
+
 
 # Backtest the Strategy
 for date, row in daily_returns.iterrows():
-    if date >= pd.to_datetime(start_date) + pd.DateOffset(days=rolling_window):
-        # Filter NaN Sharpe Ratios and get top 3 symbols
-        top_stocks = row[sharpe_ratios.loc[date].nlargest(20).index].dropna().index.tolist()
+    if date >= pd.to_datetime(start_date) + pd.DateOffset(weeks=2):
+        top_stocks = row[sortino_ratios.loc[date].nlargest(3).index].dropna().index.tolist()
         prices = historical_data.loc[date]
         cash_balance, portfolio = rebalance_portfolio(date, top_stocks, portfolio, cash_balance, prices)
         portfolio_value = calculate_portfolio_value(portfolio, cash_balance, prices)
