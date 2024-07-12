@@ -9,7 +9,7 @@ symbols = [
     "AVGO", "AXP", "BA", "BAC", "BK", "BKNG", "BLK", "BMY", "C",
     "CAT", "CHTR", "CL", "CMCSA", "COF", "COP", "COST", "CRM", "CSCO", "CVS",
     "CVX", "DE", "DHR", "DIS", "DOW", "DUK", "EMR", "EXC", "F", "FDX", "GD",
-    "GE", "GILD", "GM", "GOOG", "GOOGL", "GS", "HD", "HON", "IBM", "INTC",
+    "GE", "GILD", "GM", "GOOGL", "GS", "HD", "HON", "IBM", "INTC",
     "JNJ", "JPM", "KHC", "KO", "LIN", "LLY", "LMT", "LOW", "MA", "MCD",
     "MDLZ", "MDT", "MET", "META", "MMM", "MO", "MRK", "MS", "MSFT", "NEE",
     "NFLX", "NKE", "NVDA", "ORCL", "PEP", "PFE", "PG", "PM", "PYPL", "QCOM",
@@ -19,7 +19,7 @@ symbols = [
 
 benchmark_symbol = "^OEX"
 start_date = "2014-01-01"
-initial_balance = 500000
+initial_balance = 20000
 rolling_window = 126
 
 # Fetch Historical Stock Data
@@ -61,7 +61,7 @@ def rebalance_portfolio(date, top_stocks, portfolio, cash_balance, prices):
         if symbol in prices:
             price = prices[symbol]
             purchase_price = purchase_prices.get(symbol, 0)
-            sale_price = max( price, 0.8 * purchase_price )
+            sale_price = max( price, price)
             new_cash_balance += sale_price * shares
 
     num_stocks = len(top_stocks)
@@ -88,8 +88,8 @@ def calculate_portfolio_value(portfolio, cash_balance, prices):
 
 # Backtest the Strategy
 for date, row in daily_returns.iterrows():
-    if date >= pd.to_datetime(start_date) + pd.DateOffset(weeks=2):
-        top_stocks = row[sortino_ratios.loc[date].nlargest(3).index].dropna().index.tolist()
+    if date >= pd.to_datetime(start_date) + pd.DateOffset(days=30):
+        top_stocks = row[sortino_ratios.loc[date].nlargest(5).index].dropna().index.tolist()
         prices = historical_data.loc[date]
         cash_balance, portfolio = rebalance_portfolio(date, top_stocks, portfolio, cash_balance, prices)
         portfolio_value = calculate_portfolio_value(portfolio, cash_balance, prices)
