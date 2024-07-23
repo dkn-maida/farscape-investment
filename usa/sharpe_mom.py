@@ -18,25 +18,29 @@ symbols = [
 ]
 
 benchmark_symbol = "^OEX"
-start_date = "2010-01-01"
+start_date = "2014-01-01"
 initial_balance = 100000
-rolling_window = 126
+rolling_window = 252
 risk_free_rate = 0.4  # Assuming 1% annual risk-free rate
 
 # Fetch Historical Stock Data
 historical_data = yf.download(symbols, start=start_date)['Adj Close']
 benchmark_data = yf.download(benchmark_symbol, start=start_date)['Adj Close']
 
-# Calculate Daily Returns
-daily_returns = historical_data.pct_change()
+# Resample data to weekly on Fridays
+historical_data = historical_data.resample('W-FRI').last()
+benchmark_data = benchmark_data.resample('W-FRI').last()
+
+# Calculate Weekly Returns
+weekly_returns = historical_data.pct_change()
 
 # Calculate Rolling Mean Returns, Standard Deviation, and Sharpe Ratio
-rolling_mean_returns = daily_returns.rolling(window=rolling_window).mean()
-rolling_std_deviation = daily_returns.rolling(window=rolling_window).std()
+rolling_mean_returns = weekly_returns.rolling(window=rolling_window).mean()
+rolling_std_deviation = weekly_returns.rolling(window=rolling_window).std()
 
 # Sharpe Ratio Calculation
-annualized_mean_returns = rolling_mean_returns * 252  # Annualize the mean returns
-annualized_std_deviation = rolling_std_deviation * np.sqrt(252)  # Annualize the standard deviation
+annualized_mean_returns = rolling_mean_returns * 52  # Annualize the mean returns
+annualized_std_deviation = rolling_std_deviation * np.sqrt(52)  # Annualize the standard deviation
 sharpe_ratios = (annualized_mean_returns - risk_free_rate) / annualized_std_deviation
 
 # Initialize Portfolio Variables
@@ -46,6 +50,20 @@ portfolio_values = []
 purchase_prices = {}
 portfolio_peak = initial_balance
 
+# Read and process the NFCI data
+nfci_data = pd.read_csv('nfci.csv')
+nfci_data['date'] = pd.to_datetime(nfci_data['DATE'])
+nfci_data.set_index('date', inplace=True)
+nfci_data['nfci_sma_14'] = nfci_data['NFCI'].rolling(window=2).mean()  # Corrected window size
+nfci_data = nfci_data.resample('W-FRI').last()  # Resample to weekly on Fridays
+
+# Combine NFCI data with historical data
+combined_data = historical_data.join(nfci_data['NFCI'], how='inner')
+combined_data['nfci_sma_14'] = nfci_data['nfci_sma_14']
+combined_data['nfci_signal'] = np.where(combined_data['NFCI'] < combined_data['nfci_sma_14'], 1, 0)
+
+# Ensure that the weekly_returns index is aligned with combined_data index
+weekly_returns = weekly_returns.reindex(combined_data.index)
 
 # Rebalance Portfolio Function
 def rebalance_portfolio(date, top_stocks, portfolio, cash_balance, prices):
@@ -80,13 +98,24 @@ def calculate_portfolio_value(portfolio, cash_balance, prices):
     return total_value
 
 # Backtest the Strategy
-for date, row in daily_returns.iterrows():
-    if date >= pd.to_datetime(start_date) + pd.DateOffset(days=21):
-        cash_balance = calculate_portfolio_value(portfolio, cash_balance, historical_data.loc[date])
-        portfolio = {}     
-        top_stocks = row[sharpe_ratios.loc[date].nlargest(5).index].dropna().index.tolist()
-        prices = historical_data.loc[date]
-        cash_balance, portfolio = rebalance_portfolio(date, top_stocks, portfolio, cash_balance, prices)
+for date, row in weekly_returns.iterrows():
+    if date >= pd.to_datetime(start_date):
+        # Check the NFCI signal
+        nfci_signal = combined_data.loc[date, 'nfci_signal']
+        
+        if nfci_signal == 0:
+            # Risk-off: Move to cash
+             cash_balance = calculate_portfolio_value(portfolio, cash_balance, historical_data.loc[date])
+             portfolio={}
+        else:
+            # Risk-on: Rebalance portfolio
+            cash_balance = calculate_portfolio_value(portfolio, cash_balance, historical_data.loc[date])
+            portfolio = {}
+            top_stocks = row[sharpe_ratios.loc[date].nlargest(5).index].dropna().index.tolist()
+            prices = historical_data.loc[date]
+            cash_balance, portfolio = rebalance_portfolio(date, top_stocks, portfolio, cash_balance, prices)
+        
+        # Calculate portfolio value
         portfolio_value = calculate_portfolio_value(portfolio, cash_balance, historical_data.loc[date])
         portfolio_values.append({'Date': date, 'Portfolio_Value': portfolio_value})
 
@@ -94,7 +123,7 @@ portfolio_performance = pd.DataFrame(portfolio_values).set_index('Date')
 portfolio_performance['Portfolio_Return'] = portfolio_performance['Portfolio_Value'].pct_change()
 portfolio_performance['Cumulative_Return'] = (1 + portfolio_performance['Portfolio_Return']).cumprod() - 1
 
-# Calculate Monthly Returns
+# Calculate Yearly Returns
 monthly_performance = portfolio_performance['Portfolio_Value'].resample('12M').last()
 monthly_returns = monthly_performance.pct_change().dropna() * 100  # Convert to percentage
 
