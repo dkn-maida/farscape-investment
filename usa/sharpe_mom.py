@@ -3,62 +3,24 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-
+# Define S&P 100 stock symbols
 symbols = [
-    "AAPL", "MSFT", "AMZN", "GOOGL", "GOOG", "META","JNJ", "JPM", "V",
-    "PG", "UNH", "NVDA", "HD", "DIS", "MA", "PYPL", "VZ", "ADBE", "CMCSA",
-    "NFLX", "XOM", "INTC", "KO", "T", "MRK", "PEP", "ABT", "CSCO", "PFE",
-    "BA", "ABBV", "AVGO", "ACN", "NKE", "WMT", "CRM", "MCD", "MDT", "COST",
-    "DHR", "LLY", "AMGN", "NEE", "HON", "UNP", "TXN", "LIN", "LOW", "QCOM",
-    "UPS", "PM", "MS", "IBM", "RTX", "SCHW", "ORCL", "CVX", "LMT", "SBUX",
-    "INTU", "TMO", "AMD", "BLK", "SPGI", "GS", "GE", "ISRG", "CAT", "NOW",
-    "ADP", "BKNG", "AMT", "PLD", "ZTS", "DE", "AMAT", "MRNA", "ADI", "MU",
-    "MMM", "MDLZ", "AXP", "C", "SYK", "MO", "CI", "FIS", "CB", "EL", "REGN",
-    "GILD", "BDX", "VRTX", "ILMN", "MMC", "ICE", "FISV", "TFC", "APD", "EW",
-    "DUK", "SO", "TGT", "BSX", "HUM", "TJX", "USB", "PNC", "CME", "AON",
-    "WM", "ITW", "D", "SHW", "MET", "CCI", "ANTM", "CL", "NSC", "DG", "MCO",
-    "CSX", "EQIX", "FDX", "MCHP", "HCA", "PSA", "SPG", "F", "KHC", "ECL",
-    "ETN", "AIG", "LHX", "SYY", "DD", "STZ", "TRV", "IDXX", "A", "AZO",
-    "FCX", "ROST", "WELL", "APTV", "PAYX", "ADM", "DLR", "MTD", "CMG", "ROP",
-    "WBA", "EXC", "HPQ", "TEL", "TT", "RMD", "IQV", "MPC", "ROK", "ODFL",
-    "HLT", "CTAS", "ED", "PCAR", "BAX", "WMB", "BK", "MSI", "ANET", "EBAY",
-    "GPN", "EIX", "COF", "PGR", "MAR", "KDP", "EA", "DFS", "CPRT", "FAST",
-    "DXCM", "DHI", "PRU", "PPG", "HSY", "IFF", "AEP", "ORLY", "ALGN",
-    "FTNT", "CNC", "KR", "TDG", "CTSH", "NOC", "VRSK", "ES", "EXR", "FTV",
-    "CTVA", "SRE", "WEC", "BKR", "GLW", "AVB", "DTE", "AME", "SWK", "EQR",
-    "ARE", "FE", "ZBRA", "TER", "EFX", "VLO", "AWK", "LYB", "CDNS", "RSG",
-    "RJF", "RCL", "LH", "VMC", "MLM", "ALB", "SBAC", "WTW", "CTLT", "CAG",
-    "MTB", "ETSY", "CINF", "HIG", "STT", "AKAM", "TSCO", "CNP", "PXD", "CFG",
-    "HBAN", "MKTX", "FMC", "DOV", "NTRS", "LVS", "VTR", "UDR", "AFL", "EXPD",
-    "STE", "PKI", "TROW", "TRMB", "WY", "RF", "KEYS", "GRMN", "NTAP", "CERN",
-    "HOLX", "JKHY", "CBRE", "DRI", "KEY", "FDS", "FITB", "WAT", "PEAK",
-    "WST", "BXP", "QRVO", "MPWR", "PKG", "ULTA", "ZBH", "MAS", "TAP", "ETR",
-    "HPE", "SIVB", "ATO", "ESS", "K", "RE", "BBY", "VFC", "IPG", "WAB",
-    "BRO", "OMC", "CCL", "BIO", "PPL", "CFG", "EPAM", "O", "STX", "WRB",
-    "XYL", "FANG", "AEE", "IEX", "WDC", "CDW", "CMA", "HAS", "NI", "ZION",
-    "REG", "NWL", "SLG", "FFIV", "POOL", "ROL", "AKR", "BHF", "MTCH", "EMN",
-    "WHR", "IRM", "WYNN", "LNC", "CBOE", "CPT", "CNP", "PNW", "JWN", "BXP",
-    "FFIV", "MHK", "HST", "PKG", "DRE", "PEAK", "LEG", "WRK",
-    "BWA", "BEN", "VTRS", "TDC", "NWSA", "PVH", "NWS", "HII", "SEE", "AES",
-    "IP", "AOS", "MASI", "UHS", "TEX", "LUMN", "AAL", "NCLH", "HBI", "ALK",
-    "NLSN", "PNR", "APA", "KIM", "IVZ", "MOS", "NVR", "RHI", "MRO", "XRAY",
-    "NUE", "ALK", "NRG", "BBWI", "LKQ", "J", "NOV", "HRL",
-    "AAP", "CNA", "UNM", "WRB", "ANSS", "JCI", "OTIS", "BR","EPAM",
-    "TECH", "CEG", "INVH", "J", "STLD", "ZION", "NI", "MAS", "BKH", "FFIV",
-    "IR", "HLT", "SNA", "TXT", "ZBRA", "FTV", "TPR", "AME", "SEE", "ROK",
-    "MPWR", "ULTA", "SIVB", "AES", "CHRW", "JBHT", "HRL", "NDAQ", "NTAP",
-    "TXT", "LYV", "HOLX", "VMC", "CMS", "MLM", "JCI", "BIO", "VTRS",
-    "CAG", "AES", "AES", "L", "CE", "LII", "AAP", "HBI", "MAS", "X",
-    "AVY", "CF", "BERY", "NDSN", "UHS", "MHK", "PENN", "BALL", "DVA", "OMC",
-    "SEE", "CE", "BERY", "WRK", "HSIC", "BRO", "FMC", "XYL", "LW", "CZR",
-    "ATO", "PKG", "GWW", "TPR", "CARR", "ODFL", "XYL", "AMCR", "LKQ",
-    "LII", "UNM", "LW", "WRK", "PKG", "CTLT", "BIO", "FFIV"
+    "AAPL", "ABBV", "ABT", "ACN", "ADBE", "AIG", "AMGN", "AMT", "AMZN", "AVGO",
+    "AXP", "BA", "BAC", "BK", "BKNG", "BLK", "BMY", "BRK-B", "C", "CAT",
+    "CHTR", "CL", "CMCSA", "COF", "COP", "COST", "CRM", "CSCO", "CVS", "CVX",
+    "DHR", "DIS", "DOW", "DUK", "EMR", "EXC", "F", "META", "FDX", "GD",
+    "GE", "GILD", "GM", "GOOGL", "GS", "HD", "HON", "IBM", "INTC", "JNJ",
+    "JPM", "KHC", "KO", "LIN", "LLY", "LMT", "LOW", "MA", "MCD", "MDLZ",
+    "MDT", "MET", "META", "MMM", "MO", "MRK", "MS", "MSFT", "NEE", "NFLX",
+    "NKE", "NVDA", "ORCL", "PEP", "PFE", "PG", "PM", "PYPL", "QCOM", "RTX",
+    "SBUX", "SCHW", "SO", "SPG", "T", "TGT", "TMO", "TMUS", "TSLA", "TXN",
+    "UNH", "UNP", "UPS", "USB", "V", "VZ", "WBA", "WFC", "WMT", "XOM"
 ]
 
 benchmark_symbol = "^OEX"
-start_date = "2016-01-01"
-initial_balance = 20000
-rolling_window = 252
+start_date = "2010-01-01"
+initial_balance = 100000
+rolling_window = 126
 risk_free_rate = 0.4  # Assuming 1% annual risk-free rate
 
 # Fetch Historical Stock Data
@@ -165,3 +127,10 @@ print(f"Max Drawdown: {max_drawdown:.2%}")
 
 print("\nMonthly Returns (%):")
 print(monthly_returns.to_string(index=True, float_format="%.2f"))
+
+# Print the current top 5 stocks ranked by Sharpe ratio
+current_sharpe_ratios = sharpe_ratios.iloc[-1].dropna()
+top_5_stocks = current_sharpe_ratios.nlargest(5).index.tolist()
+print("\nCurrent Top 5 Stocks by Sharpe Ratio:")
+for stock in top_5_stocks:
+    print(f"{stock}: Sharpe Ratio = {current_sharpe_ratios[stock]:.2f}")
