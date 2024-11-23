@@ -18,7 +18,7 @@ symbols = [
 ]
 
 benchmark_symbol = "^OEX"
-start_date = "2014-01-01"
+start_date = "2019-01-01"
 initial_balance = 100000
 rolling_window = 252
 risk_free_rate = 0.4  # Assuming 1% annual risk-free rate
