@@ -4,12 +4,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.dates as mdates
+from itertools import permutations
 
 # Configure seaborn aesthetics
 sns.set(style="whitegrid", palette="muted", font_scale=1.2)
 
-# Define currency pairs
-currency_pairs = ["EURUSD=X", "USDJPY=X", "USDCNY=X", "EURJPY=X", "EURCNY=X", "JPYCNY=X"]
+# Define currencies
+currencies = ["EUR", "USD", "JPY", "CNY", "GBP", "CAD", "AUD", "CHF"]
+
+# Generate all currency pairs
+currency_pairs = [f"{base}{quote}=X" for base, quote in permutations(currencies, 2)]
 
 # Fetch FX data
 def fetch_data(pairs, start, end):
@@ -19,7 +23,7 @@ def fetch_data(pairs, start, end):
         data[pair] = df
     return pd.DataFrame(data)
 
-# Calculate momentum signals with lookback periods
+# Calculate momentum signals
 def calculate_signals(data, lookback=[2, 3, 4]):
     signals = pd.DataFrame(index=data.index)
     for col in data.columns:
@@ -68,7 +72,7 @@ def calculate_drawdowns(cumulative_returns):
     return drawdowns
 
 # Parameters
-start_date = "1999-01-01"
+start_date = "2010-01-01"
 end_date = "2023-01-01"
 
 # Fetch FX data
