@@ -2,57 +2,21 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import urllib
 
+proxyServer = urllib.request.getproxies()['http']
 
 symbols = [
-    "AAPL", "MSFT", "AMZN", "GOOGL", "GOOG", "META","JNJ", "JPM", "V",
-    "PG", "UNH", "NVDA", "HD", "DIS", "MA", "PYPL", "VZ", "ADBE", "CMCSA",
-    "NFLX", "XOM", "INTC", "KO", "T", "MRK", "PEP", "ABT", "CSCO", "PFE",
-    "BA", "ABBV", "AVGO", "ACN", "NKE", "WMT", "CRM", "MCD", "MDT", "COST",
-    "DHR", "LLY", "AMGN", "NEE", "HON", "UNP", "TXN", "LIN", "LOW", "QCOM",
-    "UPS", "PM", "MS", "IBM", "RTX", "SCHW", "ORCL", "CVX", "LMT", "SBUX",
-    "INTU", "TMO", "AMD", "BLK", "SPGI", "GS", "GE", "ISRG", "CAT", "NOW",
-    "ADP", "BKNG", "AMT", "PLD", "ZTS", "DE", "AMAT", "MRNA", "ADI", "MU",
-    "MMM", "MDLZ", "AXP", "C", "SYK", "MO", "CI", "FIS", "CB", "EL", "REGN",
-    "GILD", "BDX", "VRTX", "ILMN", "MMC", "ICE", "FISV", "TFC", "APD", "EW",
-    "DUK", "SO", "TGT", "BSX", "HUM", "TJX", "USB", "PNC", "CME", "AON",
-    "WM", "ITW", "D", "SHW", "MET", "CCI", "ANTM", "CL", "NSC", "DG", "MCO",
-    "CSX", "EQIX", "FDX", "MCHP", "HCA", "PSA", "SPG", "F", "KHC", "ECL",
-    "ETN", "AIG", "LHX", "SYY", "DD", "STZ", "TRV", "IDXX", "A", "AZO",
-    "FCX", "ROST", "WELL", "APTV", "PAYX", "ADM", "DLR", "MTD", "CMG", "ROP",
-    "WBA", "EXC", "HPQ", "TEL", "TT", "RMD", "IQV", "MPC", "ROK", "ODFL",
-    "HLT", "CTAS", "ED", "PCAR", "BAX", "WMB", "BK", "MSI", "ANET", "EBAY",
-    "GPN", "EIX", "COF", "PGR", "MAR", "KDP", "EA", "DFS", "CPRT", "FAST",
-    "DXCM", "DHI", "PRU", "PPG", "HSY", "IFF", "AEP", "ORLY", "ALGN",
-    "FTNT", "CNC", "KR", "TDG", "CTSH", "NOC", "VRSK", "ES", "EXR", "FTV",
-    "CTVA", "SRE", "WEC", "BKR", "GLW", "AVB", "DTE", "AME", "SWK", "EQR",
-    "ARE", "FE", "ZBRA", "TER", "EFX", "VLO", "AWK", "LYB", "CDNS", "RSG",
-    "RJF", "RCL", "LH", "VMC", "MLM", "ALB", "SBAC", "WTW", "CTLT", "CAG",
-    "MTB", "ETSY", "CINF", "HIG", "STT", "AKAM", "TSCO", "CNP", "PXD", "CFG",
-    "HBAN", "MKTX", "FMC", "DOV", "NTRS", "LVS", "VTR", "UDR", "AFL", "EXPD",
-    "STE", "PKI", "TROW", "TRMB", "WY", "RF", "KEYS", "GRMN", "NTAP", "CERN",
-    "HOLX", "JKHY", "CBRE", "DRI", "KEY", "FDS", "FITB", "WAT", "PEAK",
-    "WST", "BXP", "QRVO", "MPWR", "PKG", "ULTA", "ZBH", "MAS", "TAP", "ETR",
-    "HPE", "SIVB", "ATO", "ESS", "K", "RE", "BBY", "VFC", "IPG", "WAB",
-    "BRO", "OMC", "CCL", "BIO", "PPL", "CFG", "EPAM", "O", "STX", "WRB",
-    "XYL", "FANG", "AEE", "IEX", "WDC", "CDW", "CMA", "HAS", "NI", "ZION",
-    "REG", "NWL", "SLG", "FFIV", "POOL", "ROL", "AKR", "BHF", "MTCH", "EMN",
-    "WHR", "IRM", "WYNN", "LNC", "CBOE", "CPT", "CNP", "PNW", "JWN", "BXP",
-    "FFIV", "MHK", "HST", "PKG", "DRE", "PEAK", "LEG", "WRK",
-    "BWA", "BEN", "VTRS", "TDC", "NWSA", "PVH", "NWS", "HII", "SEE", "AES",
-    "IP", "AOS", "MASI", "UHS", "TEX", "LUMN", "AAL", "NCLH", "HBI", "ALK",
-    "NLSN", "PNR", "APA", "KIM", "IVZ", "MOS", "NVR", "RHI", "MRO", "XRAY",
-    "NUE", "ALK", "NRG", "BBWI", "LKQ", "J", "NOV", "HRL",
-    "AAP", "CNA", "UNM", "WRB", "ANSS", "JCI", "OTIS", "BR","EPAM",
-    "TECH", "CEG", "INVH", "J", "STLD", "ZION", "NI", "MAS", "BKH", "FFIV",
-    "IR", "HLT", "SNA", "TXT", "ZBRA", "FTV", "TPR", "AME", "SEE", "ROK",
-    "MPWR", "ULTA", "SIVB", "AES", "CHRW", "JBHT", "HRL", "NDAQ", "NTAP",
-    "TXT", "LYV", "HOLX", "VMC", "CMS", "MLM", "JCI", "BIO", "VTRS",
-    "CAG", "AES", "AES", "L", "CE", "LII", "AAP", "HBI", "MAS", "X",
-    "AVY", "CF", "BERY", "NDSN", "UHS", "MHK", "PENN", "BALL", "DVA", "OMC",
-    "SEE", "CE", "BERY", "WRK", "HSIC", "BRO", "FMC", "XYL", "LW", "CZR",
-    "ATO", "PKG", "GWW", "TPR", "CARR", "ODFL", "XYL", "AMCR", "LKQ",
-    "LII", "UNM", "LW", "WRK", "PKG", "CTLT", "BIO", "FFIV"
+    "AAPL", "ABBV", "ABT", "ACN", "AIG", "ALL", "AMGN", "AMT", "AMZN",
+    "AXP", "BA", "BAC", "BIIB", "BK", "BKNG", "BLK", "BMY", "C", "CAT",
+    "CHTR", "CL", "COF", "COP", "COST", "CRM", "CSCO", "CVS", "CVX", "DHR",
+    "DIS", "DOW", "DUK", "EMR", "EXC", "FDX", "GD", "GE", "GILD", "GM",
+    "GOOGL", "GS", "HD", "HON", "IBM", "INTC", "JNJ", "JPM", "KHC", "KMI",
+    "KO", "LIN", "LLY", "LMT", "LOW", "MA", "MCD", "MDLZ", "MDT", "MET",
+    "META", "MMM", "MO", "MRK", "MS", "MSFT", "NEE", "NFLX", "NKE", "NVDA",
+    "ORCL", "PEP", "PFE", "PG", "PM", "PYPL", "QCOM", "RTX", "SBUX", "SCHW",
+    "SO", "SPG", "TGT", "TJX", "TMO", "TMUS", "TSLA", "TXN", "UNH",
+    "UNP", "UPS", "USB", "V", "VZ", "WBA", "WFC", "WMT", "XOM"
 ]
 
 benchmark_symbol = "^OEX"
@@ -62,8 +26,8 @@ rolling_window = 252
 risk_free_rate = 0.4  # Assuming 1% annual risk-free rate
 
 # Fetch Historical Stock Data
-historical_data = yf.download(symbols, start=start_date)['Adj Close']
-benchmark_data = yf.download(benchmark_symbol, start=start_date)['Adj Close']
+historical_data = yf.download(symbols, start=start_date,  proxy=proxyServer)['Adj Close']
+benchmark_data = yf.download(benchmark_symbol, start=start_date,  proxy=proxyServer)['Adj Close']
 
 # Calculate Daily Returns
 daily_returns = historical_data.pct_change()
