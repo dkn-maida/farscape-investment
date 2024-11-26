@@ -4,7 +4,7 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 
 # Download SPY data
-spy = yf.download('^GSPC', start='1900-01-01', end='2024-11-26')
+spy = yf.download('^GSPC', start='1924-01-01', end='2024-11-26')
 
 # Resample to monthly frequency
 spy_monthly = spy['Adj Close'].resample('ME').last()
@@ -23,7 +23,8 @@ rolling_returns['Average Rolling Return'] = rolling_returns.mean(axis=1)
 spy_monthly = pd.concat([spy_monthly, rolling_returns['Average Rolling Return']], axis=1)
 
 # Define strategy using the average rolling returns
-threshold = 0.01  # 1% threshold
+threshold = 0.01  # 1% lower threshold
+upper_limit = 0.20  # 20% threshold for visualization only
 
 # Lag the signal to avoid look-ahead bias
 spy_monthly['Signal'] = spy_monthly['Average Rolling Return'].shift(1) > threshold
@@ -65,14 +66,19 @@ spy_cagr, spy_max_drawdown, spy_volatility = compute_metrics_monthly(
 )
 
 # Print results
-print("Performance Metrics (Based on Average Rolling Returns):")
+print("Performance Metrics (Without 20% Rule):")
 print(f"Strategy:   CAGR: {strategy_cagr:.2%}, Max Drawdown: {strategy_max_drawdown:.2%}, Volatility: {strategy_volatility:.2%}")
 print(f"SPY:        CAGR: {spy_cagr:.2%}, Max Drawdown: {spy_max_drawdown:.2%}, Volatility: {spy_volatility:.2%}")
 
-# Plot the results
-fig, axs = plt.subplots(3, 1, figsize=(12, 12), sharex=True)
+# Load USD yield data
+usd_data = pd.read_csv('usd.csv', parse_dates=['Date'])
+usd_data.set_index('Date', inplace=True)
+usd_data['Yield'] = usd_data['yield'] / 100  # Convert to percentage
 
-# Plot cumulative returns for the strategy and SPY
+# Plot the results
+fig, axs = plt.subplots(4, 1, figsize=(12, 16), sharex=True)
+
+#Plot cumulative returns for the strategy and SPY
 axs[0].plot(spy_monthly.index, spy_monthly['Cumulative Strategy Return'], label='Cumulative Strategy Return', color='green')
 axs[0].plot(spy_monthly.index, spy_monthly['Cumulative SPY Return'], label='Cumulative SPY Return (Baseline)', color='blue')
 axs[0].set_title('Cumulative Returns: Strategy vs. SPY (Monthly)')
@@ -83,7 +89,9 @@ axs[0].legend()
 
 # Plot average rolling returns
 axs[1].plot(rolling_returns.index, rolling_returns['Average Rolling Return'], label='Average Rolling Return', color='darkred')
-axs[1].axhline(threshold, color='orange', linestyle='--', linewidth=0.8, label='1% Threshold')
+axs[1].axhline(threshold, color='orange', linestyle='--', linewidth=0.8, label='1% Lower Threshold')
+axs[1].axhline(upper_limit, color='red', linestyle='--', linewidth=0.8, label='20% Upper Limit (Visualization)')
+axs[1].axhline(-0.16, color='blue', linestyle='--', linewidth=0.8, label='-16% Lower Limit (Visualization)')
 axs[1].set_title('Average Rolling Returns (12M to 1M)')
 axs[1].set_ylabel('Average Return')
 axs[1].grid(True)
@@ -91,10 +99,17 @@ axs[1].legend()
 
 # Plot strategy signal
 axs[2].plot(spy_monthly.index, spy_monthly['Signal'], label='Signal (Active Periods)', color='purple')
-axs[2].set_title('Strategy Signal (Based on Average Rolling Returns)')
+axs[2].set_title('Strategy Signal (Based on Rolling Returns)')
 axs[2].set_ylabel('Signal')
 axs[2].grid(True)
 axs[2].legend()
+
+# Plot the 1-year yield
+axs[3].plot(usd_data.index, usd_data['Yield'], label='1-Year Yield', color='brown')
+axs[3].set_title('1-Year Yield')
+axs[3].set_ylabel('Yield (%)')
+axs[3].grid(True)
+axs[3].legend()
 
 # Adjust layout
 plt.xlabel('Date')
